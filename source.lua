@@ -1,11 +1,159 @@
--- UI Library Core
+-- First, create the UI Library module properly
 local UILibrary = {}
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+local UserInputService = game:GetService("UserInputService")
 
+-- Theme
+local Theme = {
+    Background = Color3.fromRGB(20, 20, 40),
+    Primary = Color3.fromRGB(255, 51, 187),      -- Hot Pink
+    Secondary = Color3.fromRGB(0, 255, 255),     -- Cyan
+    Tertiary = Color3.fromRGB(138, 43, 226),     -- Purple
+    Text = Color3.fromRGB(255, 255, 255),
+    DarkContrast = Color3.fromRGB(15, 15, 30),
+    LightContrast = Color3.fromRGB(40, 40, 60)
+}
+
+-- Initialize new UI
+function UILibrary.new(title)
+    local UI = {}
+    
+    -- Create ScreenGui
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "UILibrary"
+    ScreenGui.Parent = game.CoreGui
+    
+    -- Create main frame
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 500, 0, 350)
+    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
+    MainFrame.BackgroundColor3 = Theme.Background
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+    
+    -- Store references
+    UI.ScreenGui = ScreenGui
+    UI.MainFrame = MainFrame
+    UI.Tabs = {}
+    
+    -- Create tab container
+    local TabContainer = Instance.new("Frame")
+    TabContainer.Name = "TabContainer"
+    TabContainer.Size = UDim2.new(0, 120, 1, -30)
+    TabContainer.Position = UDim2.new(0, 0, 0, 30)
+    TabContainer.BackgroundColor3 = Theme.DarkContrast
+    TabContainer.BorderSizePixel = 0
+    TabContainer.Parent = MainFrame
+    
+    UI.TabContainer = TabContainer
+    
+    -- Create tab content container
+    local TabContent = Instance.new("Frame")
+    TabContent.Name = "TabContent"
+    TabContent.Size = UDim2.new(1, -120, 1, -30)
+    TabContent.Position = UDim2.new(0, 120, 0, 30)
+    TabContent.BackgroundColor3 = Theme.Background
+    TabContent.BorderSizePixel = 0
+    TabContent.Parent = MainFrame
+    
+    UI.TabContent = TabContent
+    
+    -- Create Tab function
+    function UI:CreateTab(name)
+        local Tab = {}
+        
+        -- Create tab button
+        local TabButton = Instance.new("TextButton")
+        TabButton.Name = name.."Tab"
+        TabButton.Size = UDim2.new(1, 0, 0, 35)
+        TabButton.BackgroundColor3 = Theme.DarkContrast
+        TabButton.BorderSizePixel = 0
+        TabButton.Text = name
+        TabButton.TextColor3 = Theme.Text
+        TabButton.TextSize = 14
+        TabButton.Font = Enum.Font.GothamBold
+        TabButton.Parent = self.TabContainer
+        
+        -- Create tab content frame
+        local TabFrame = Instance.new("ScrollingFrame")
+        TabFrame.Name = name.."Content"
+        TabFrame.Size = UDim2.new(1, 0, 1, 0)
+        TabFrame.BackgroundTransparency = 1
+        TabFrame.BorderSizePixel = 0
+        TabFrame.ScrollBarThickness = 2
+        TabFrame.Visible = false
+        TabFrame.Parent = self.TabContent
+        
+        -- Add padding and layout
+        local UIListLayout = Instance.new("UIListLayout")
+        UIListLayout.Padding = UDim.new(0, 5)
+        UIListLayout.Parent = TabFrame
+        
+        local UIPadding = Instance.new("UIPadding")
+        UIPadding.PaddingLeft = UDim.new(0, 10)
+        UIPadding.PaddingRight = UDim.new(0, 10)
+        UIPadding.PaddingTop = UDim.new(0, 10)
+        UIPadding.Parent = TabFrame
+        
+        -- Tab Functions
+        function Tab:CreateButton(text, callback)
+            local Button = Instance.new("TextButton")
+            Button.Name = text.."Button"
+            Button.Size = UDim2.new(1, 0, 0, 35)
+            Button.BackgroundColor3 = Theme.LightContrast
+            Button.BorderSizePixel = 0
+            Button.Text = text
+            Button.TextColor3 = Theme.Text
+            Button.TextSize = 14
+            Button.Font = Enum.Font.GothamSemibold
+            Button.Parent = TabFrame
+            
+            Button.MouseButton1Click:Connect(function()
+                if callback then callback() end
+            end)
+            
+            return Button
+        end
+        
+        function Tab:CreateToggle(text, default, callback)
+            local Toggle = {}
+            local Enabled = default or false
+            
+            -- Create toggle here (using the code from previous messages)
+            -- ...
+            
+            return Toggle
+        end
+        
+        -- Add other component functions (Slider, Dropdown, etc.)
+        -- ...
+        
+        -- Tab button click handler
+        TabButton.MouseButton1Click:Connect(function()
+            for _, v in pairs(self.TabContent:GetChildren()) do
+                if v:IsA("ScrollingFrame") then
+                    v.Visible = false
+                end
+            end
+            TabFrame.Visible = true
+        end)
+        
+        return Tab
+    end
+    
+    return UI
+end
+
+-- Example usage:
+local UI = UILibrary.new("My UI")
+local MainTab = UI:CreateTab("Main")
+
+MainTab:CreateButton("Click Me", function()
+    print("Button clicked!")
+end)
 -- Configuration
 local Config = {
     MainColor = Color3.fromRGB(36, 36, 36),

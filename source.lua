@@ -1,75 +1,119 @@
--- SynthwaveUI Library with Notifications
+-- ModernSynthUI Library
 -- Created by Claude
-local SynthwaveUI = {}
+
+local ModernSynthUI = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local MarketplaceService = game:GetService("MarketplaceService")
+
+-- Modern Color Scheme
+local THEME = {
+    Primary = Color3.fromRGB(32, 33, 36),      -- Dark background
+    Secondary = Color3.fromRGB(47, 48, 52),    -- Lighter background
+    Accent = Color3.fromRGB(138, 180, 255),    -- Blue accent
+    Text = Color3.fromRGB(255, 255, 255),      -- White text
+    TextDark = Color3.fromRGB(200, 200, 200),  -- Darker text
+    Success = Color3.fromRGB(72, 199, 142),    -- Green
+    Warning = Color3.fromRGB(255, 184, 76),    -- Orange
+    Error = Color3.fromRGB(255, 75, 75),       -- Red
+    Highlight = Color3.fromRGB(58, 59, 64),    -- Hover highlight
+}
 
 -- Constants
 local TWEEN_SPEED = 0.2
-local SYNTHWAVE_COLORS = {
-    Background = Color3.fromRGB(20, 14, 45),
-    Accent = Color3.fromRGB(250, 84, 255),
-    Secondary = Color3.fromRGB(43, 217, 255),
-    Text = Color3.fromRGB(255, 255, 255),
-    Border = Color3.fromRGB(126, 0, 250),
-    Success = Color3.fromRGB(0, 255, 128),
-    Warning = Color3.fromRGB(255, 183, 0),
-    Error = Color3.fromRGB(255, 0, 68)
-}
+local CORNER_RADIUS = UDim.new(0, 8)
+local FONT = Enum.Font.GothamMedium
+local FONT_BOLD = Enum.Font.GothamBold
+
+-- Utility Functions
+local function CreateElement(class, properties)
+    local element = Instance.new(class)
+    for property, value in pairs(properties) do
+        element[property] = value
+    end
+    return element
+end
+
+local function CreateCorner(parent)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = CORNER_RADIUS
+    corner.Parent = parent
+    return corner
+end
+
+local function CreateStroke(parent, color)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color or THEME.Secondary
+    stroke.Thickness = 1
+    stroke.Parent = parent
+    return stroke
+end
 
 -- Notification System
-function SynthwaveUI:Notify(title, message, notifType, duration)
+function ModernSynthUI:Notify(title, message, notifType, duration)
     duration = duration or 5
-    local NotifGui = Instance.new("ScreenGui")
-    local NotifFrame = Instance.new("Frame")
-    local NotifTitle = Instance.new("TextLabel")
-    local NotifMessage = Instance.new("TextLabel")
-    local NotifBar = Instance.new("Frame")
+    local NotifGui = CreateElement("ScreenGui", {
+        Name = "ModernSynthNotification",
+        Parent = game.CoreGui
+    })
+
+    local NotifFrame = CreateElement("Frame", {
+        Name = "NotifFrame",
+        Parent = NotifGui,
+        BackgroundColor3 = THEME.Secondary,
+        Position = UDim2.new(1, 20, 0.8, 0),
+        Size = UDim2.new(0, 300, 0, 80),
+        BackgroundTransparency = 0.1
+    })
+    CreateCorner(NotifFrame)
     
-    NotifGui.Name = "SynthwaveNotification"
-    NotifGui.Parent = game.CoreGui
-    
-    NotifFrame.Name = "NotifFrame"
-    NotifFrame.Parent = NotifGui
-    NotifFrame.BackgroundColor3 = SYNTHWAVE_COLORS.Background
-    NotifFrame.BorderColor3 = SYNTHWAVE_COLORS.Border
-    NotifFrame.Position = UDim2.new(1, 20, 0.8, 0)
-    NotifFrame.Size = UDim2.new(0, 300, 0, 80)
-    NotifFrame.ClipsDescendants = true
-    
-    NotifTitle.Name = "NotifTitle"
-    NotifTitle.Parent = NotifFrame
-    NotifTitle.BackgroundTransparency = 1
-    NotifTitle.Position = UDim2.new(0, 10, 0, 5)
-    NotifTitle.Size = UDim2.new(1, -20, 0, 25)
-    NotifTitle.Font = Enum.Font.GothamBold
-    NotifTitle.Text = title
-    NotifTitle.TextColor3 = SYNTHWAVE_COLORS.Text
-    NotifTitle.TextSize = 16
-    NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
-    
-    NotifMessage.Name = "NotifMessage"
-    NotifMessage.Parent = NotifFrame
-    NotifMessage.BackgroundTransparency = 1
-    NotifMessage.Position = UDim2.new(0, 10, 0, 30)
-    NotifMessage.Size = UDim2.new(1, -20, 1, -40)
-    NotifMessage.Font = Enum.Font.Gotham
-    NotifMessage.Text = message
-    NotifMessage.TextColor3 = SYNTHWAVE_COLORS.Text
-    NotifMessage.TextSize = 14
-    NotifMessage.TextWrapped = true
-    NotifMessage.TextXAlignment = Enum.TextXAlignment.Left
-    NotifMessage.TextYAlignment = Enum.TextYAlignment.Top
-    
-    NotifBar.Name = "NotifBar"
-    NotifBar.Parent = NotifFrame
-    NotifBar.BackgroundColor3 = SYNTHWAVE_COLORS[notifType or "Accent"]
-    NotifBar.BorderSizePixel = 0
-    NotifBar.Position = UDim2.new(0, 0, 1, -2)
-    NotifBar.Size = UDim2.new(1, 0, 0, 2)
-    
+    local NotifColor = CreateElement("Frame", {
+        Name = "NotifColor",
+        Parent = NotifFrame,
+        BackgroundColor3 = THEME[notifType or "Accent"],
+        Size = UDim2.new(0, 4, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0)
+    })
+    CreateCorner(NotifColor)
+
+    local NotifContent = CreateElement("Frame", {
+        Name = "NotifContent",
+        Parent = NotifFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 15, 0, 0),
+        Size = UDim2.new(1, -20, 1, 0)
+    })
+
+    local NotifTitle = CreateElement("TextLabel", {
+        Name = "NotifTitle",
+        Parent = NotifContent,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 0, 0, 10),
+        Size = UDim2.new(1, 0, 0, 20),
+        Font = FONT_BOLD,
+        Text = title,
+        TextColor3 = THEME.Text,
+        TextSize = 16,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
+    local NotifMessage = CreateElement("TextLabel", {
+        Name = "NotifMessage",
+        Parent = NotifContent,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 0, 0, 35),
+        Size = UDim2.new(1, 0, 0, 35),
+        Font = FONT,
+        Text = message,
+        TextColor3 = THEME.TextDark,
+        TextSize = 14,
+        TextWrapped = true,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
     -- Animate notification
     local function animateNotif()
         NotifFrame:TweenPosition(
@@ -95,91 +139,159 @@ function SynthwaveUI:Notify(title, message, notifType, duration)
 end
 
 -- Create main window
-function SynthwaveUI:CreateWindow(title)
+function ModernSynthUI:CreateWindow(title)
     local Window = {}
     
     -- Main GUI
-    local ScreenGui = Instance.new("ScreenGui")
-    local MainFrame = Instance.new("Frame")
-    local TopBar = Instance.new("Frame")
-    local Title = Instance.new("TextLabel")
-    local CloseButton = Instance.new("TextButton")
-    local MinimizeButton = Instance.new("TextButton")
-    local ContentFrame = Instance.new("ScrollingFrame")
+    local ScreenGui = CreateElement("ScreenGui", {
+        Name = "ModernSynthUI",
+        Parent = game.CoreGui,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    })
+
+    local MainFrame = CreateElement("Frame", {
+        Name = "MainFrame",
+        Parent = ScreenGui,
+        BackgroundColor3 = THEME.Primary,
+        Position = UDim2.new(0.5, -350, 0.5, -200),
+        Size = UDim2.new(0, 700, 0, 400),
+        ClipsDescendants = true
+    })
+    CreateCorner(MainFrame)
     
-    ScreenGui.Name = "SynthwaveUI"
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    MainFrame.Name = "MainFrame"
-    MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = SYNTHWAVE_COLORS.Background
-    MainFrame.BorderColor3 = SYNTHWAVE_COLORS.Border
-    MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
-    MainFrame.Size = UDim2.new(0, 400, 0, 300)
-    MainFrame.ClipsDescendants = true
-    
-    TopBar.Name = "TopBar"
-    TopBar.Parent = MainFrame
-    TopBar.BackgroundColor3 = SYNTHWAVE_COLORS.Accent
-    TopBar.Size = UDim2.new(1, 0, 0, 30)
-    
-    Title.Name = "Title"
-    Title.Parent = TopBar
-    Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 10, 0, 0)
-    Title.Size = UDim2.new(1, -60, 1, 0)
-    Title.Font = Enum.Font.GothamBold
-    Title.Text = title
-    Title.TextColor3 = SYNTHWAVE_COLORS.Text
-    Title.TextSize = 16
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    
-    CloseButton.Name = "CloseButton"
-    CloseButton.Parent = TopBar
-    CloseButton.BackgroundTransparency = 1
-    CloseButton.Position = UDim2.new(1, -30, 0, 0)
-    CloseButton.Size = UDim2.new(0, 30, 1, 0)
-    CloseButton.Font = Enum.Font.GothamBold
-    CloseButton.Text = "X"
-    CloseButton.TextColor3 = SYNTHWAVE_COLORS.Text
-    CloseButton.TextSize = 16
-    
-    MinimizeButton.Name = "MinimizeButton"
-    MinimizeButton.Parent = TopBar
-    MinimizeButton.BackgroundTransparency = 1
-    MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
-    MinimizeButton.Size = UDim2.new(0, 30, 1, 0)
-    MinimizeButton.Font = Enum.Font.GothamBold
-    MinimizeButton.Text = "-"
-    MinimizeButton.TextColor3 = SYNTHWAVE_COLORS.Text
-    MinimizeButton.TextSize = 16
-    
-    ContentFrame.Name = "ContentFrame"
-    ContentFrame.Parent = MainFrame
-    ContentFrame.BackgroundTransparency = 1
-    ContentFrame.Position = UDim2.new(0, 0, 0, 30)
-    ContentFrame.Size = UDim2.new(1, 0, 1, -30)
-    ContentFrame.ScrollBarThickness = 4
-    ContentFrame.ScrollBarImageColor3 = SYNTHWAVE_COLORS.Secondary
-    
+    local SideBar = CreateElement("Frame", {
+        Name = "SideBar",
+        Parent = MainFrame,
+        BackgroundColor3 = THEME.Secondary,
+        Size = UDim2.new(0, 60, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0)
+    })
+    CreateCorner(SideBar)
+
+    local ContentFrame = CreateElement("Frame", {
+        Name = "ContentFrame",
+        Parent = MainFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 70, 0, 10),
+        Size = UDim2.new(1, -80, 1, -20)
+    })
+
+    -- Create Homepage
+    local HomePage = CreateElement("Frame", {
+        Name = "HomePage",
+        Parent = ContentFrame,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Visible = true
+    })
+
+    -- Player Avatar
+    local AvatarFrame = CreateElement("Frame", {
+        Name = "AvatarFrame",
+        Parent = HomePage,
+        BackgroundColor3 = THEME.Secondary,
+        Size = UDim2.new(0, 180, 0, 180),
+        Position = UDim2.new(0, 10, 0, 10)
+    })
+    CreateCorner(AvatarFrame)
+
+    local AvatarImage = CreateElement("ImageLabel", {
+        Name = "AvatarImage",
+        Parent = AvatarFrame,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, -20, 1, -20),
+        Position = UDim2.new(0, 10, 0, 10),
+        Image = Players:GetUserThumbnailAsync(
+            LocalPlayer.UserId,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size420x420
+        )
+    })
+    CreateCorner(AvatarImage)
+
+    -- Player Info
+    local InfoFrame = CreateElement("Frame", {
+        Name = "InfoFrame",
+        Parent = HomePage,
+        BackgroundColor3 = THEME.Secondary,
+        Size = UDim2.new(1, -210, 0, 180),
+        Position = UDim2.new(0, 200, 0, 10)
+    })
+    CreateCorner(InfoFrame)
+
+    local PlayerName = CreateElement("TextLabel", {
+        Name = "PlayerName",
+        Parent = InfoFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 15, 0, 15),
+        Size = UDim2.new(1, -30, 0, 25),
+        Font = FONT_BOLD,
+        Text = "@" .. LocalPlayer.Name,
+        TextColor3 = THEME.Text,
+        TextSize = 20,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
+    local GameName = CreateElement("TextLabel", {
+        Name = "GameName",
+        Parent = InfoFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 15, 0, 45),
+        Size = UDim2.new(1, -30, 0, 20),
+        Font = FONT,
+        Text = "Loading game info...",
+        TextColor3 = THEME.TextDark,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
+    -- Get game name
+    pcall(function()
+        local gameInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+        GameName.Text = gameInfo.Name
+    end)
+
+    -- Navigation Buttons
+    local NavButtons = {}
+    local CurrentPage = HomePage
+
+    local function CreateNavButton(icon, position)
+        local NavButton = CreateElement("ImageButton", {
+            Name = "NavButton",
+            Parent = SideBar,
+            BackgroundColor3 = THEME.Highlight,
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 10, 0, position),
+            Size = UDim2.new(0, 40, 0, 40),
+            Image = icon
+        })
+        CreateCorner(NavButton)
+        return NavButton
+    end
+
+    -- Home Button
+    local HomeButton = CreateNavButton("rbxassetid://7733960981", 10)
+    HomeButton.BackgroundTransparency = 0
+
+    -- Add more navigation buttons here...
+
     -- Make window draggable
     local dragging
     local dragInput
     local dragStart
     local startPos
-    
+
     local function updateDrag(input)
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
-    
-    TopBar.InputBegan:Connect(function(input)
+
+    MainFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = MainFrame.Position
-            
+
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -187,150 +299,251 @@ function SynthwaveUI:CreateWindow(title)
             end)
         end
     end)
-    
-    TopBar.InputChanged:Connect(function(input)
+
+    MainFrame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
-    
+
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             updateDrag(input)
         end
     end)
-    
-    -- Close and minimize functionality
-    local minimized = false
-    
-    CloseButton.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
-    end)
-    
-    MinimizeButton.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        local targetSize = minimized and UDim2.new(1, 0, 0, 30) or UDim2.new(1, 0, 1, -30)
-        TweenService:Create(ContentFrame, TweenInfo.new(TWEEN_SPEED), {Size = targetSize}):Play()
-    end)
-    
-    -- Element creation functions
-    function Window:AddButton(text, callback)
-        local Button = Instance.new("TextButton")
-        Button.Name = "Button"
-        Button.Parent = ContentFrame
-        Button.BackgroundColor3 = SYNTHWAVE_COLORS.Secondary
-        Button.Size = UDim2.new(0.9, 0, 0, 30)
-        Button.Position = UDim2.new(0.05, 0, 0, #ContentFrame:GetChildren() * 40)
-        Button.Font = Enum.Font.GothamSemibold
-        Button.Text = text
-        Button.TextColor3 = SYNTHWAVE_COLORS.Text
-        Button.TextSize = 14
+
+    -- Window Methods
+    function Window:AddPage(title, icon)
+        local Page = CreateElement("ScrollingFrame", {
+            Name = title .. "Page",
+            Parent = ContentFrame,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 1, 0),
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = THEME.Accent,
+            Visible = false
+        })
+
+        local NavButton = CreateNavButton(icon, 60 + #NavButtons * 50)
+        table.insert(NavButtons, NavButton)
+
+        NavButton.MouseButton1Click:Connect(function()
+            CurrentPage.Visible = false
+            Page.Visible = true
+            CurrentPage = Page
+
+            for _, btn in ipairs(NavButtons) do
+                btn.BackgroundTransparency = 1
+            end
+            NavButton.BackgroundTransparency = 0
+        end)
+
+        return Page
+    end
+
+        -- Window Methods (continued)
+    function Window:AddButton(parent, text, callback)
+        local Button = CreateElement("TextButton", {
+            Name = "Button",
+            Parent = parent,
+            BackgroundColor3 = THEME.Secondary,
+            Size = UDim2.new(1, -20, 0, 40),
+            Position = UDim2.new(0, 10, 0, (#parent:GetChildren() - 1) * 50 + 10),
+            Font = FONT,
+            Text = text,
+            TextColor3 = THEME.Text,
+            TextSize = 14,
+            AutoButtonColor = false
+        })
+        CreateCorner(Button)
         
-        Button.MouseButton1Click:Connect(callback)
+        -- Hover Effect
+        Button.MouseEnter:Connect(function()
+            TweenService:Create(Button, TweenInfo.new(0.2), {
+                BackgroundColor3 = THEME.Highlight
+            }):Play()
+        end)
+        
+        Button.MouseLeave:Connect(function()
+            TweenService:Create(Button, TweenInfo.new(0.2), {
+                BackgroundColor3 = THEME.Secondary
+            }):Play()
+        end)
+        
+        Button.MouseButton1Click:Connect(function()
+            callback()
+            -- Click effect
+            TweenService:Create(Button, TweenInfo.new(0.1), {
+                BackgroundColor3 = THEME.Accent
+            }):Play()
+            wait(0.1)
+            TweenService:Create(Button, TweenInfo.new(0.1), {
+                BackgroundColor3 = THEME.Secondary
+            }):Play()
+        end)
+        
         return Button
     end
     
-    function Window:AddToggle(text, default, callback)
-        local ToggleFrame = Instance.new("Frame")
-        local ToggleButton = Instance.new("TextButton")
-        local ToggleIndicator = Instance.new("Frame")
-        local ToggleLabel = Instance.new("TextLabel")
+    function Window:AddToggle(parent, text, default, callback)
+        local ToggleFrame = CreateElement("Frame", {
+            Name = "ToggleFrame",
+            Parent = parent,
+            BackgroundColor3 = THEME.Secondary,
+            Size = UDim2.new(1, -20, 0, 40),
+            Position = UDim2.new(0, 10, 0, (#parent:GetChildren() - 1) * 50 + 10)
+        })
+        CreateCorner(ToggleFrame)
         
-        ToggleFrame.Name = "ToggleFrame"
-        ToggleFrame.Parent = ContentFrame
-        ToggleFrame.BackgroundTransparency = 1
-        ToggleFrame.Size = UDim2.new(0.9, 0, 0, 30)
-        ToggleFrame.Position = UDim2.new(0.05, 0, 0, #ContentFrame:GetChildren() * 40)
+        local ToggleLabel = CreateElement("TextLabel", {
+            Name = "ToggleLabel",
+            Parent = ToggleFrame,
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 15, 0, 0),
+            Size = UDim2.new(1, -65, 1, 0),
+            Font = FONT,
+            Text = text,
+            TextColor3 = THEME.Text,
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
         
-        ToggleButton.Name = "ToggleButton"
-        ToggleButton.Parent = ToggleFrame
-        ToggleButton.BackgroundColor3 = SYNTHWAVE_COLORS.Secondary
-        ToggleButton.Size = UDim2.new(0, 30, 0, 30)
-        ToggleButton.Position = UDim2.new(0, 0, 0, 0)
+        local ToggleButton = CreateElement("Frame", {
+            Name = "ToggleButton",
+            Parent = ToggleFrame,
+            BackgroundColor3 = default and THEME.Accent or THEME.Highlight,
+            Position = UDim2.new(1, -50, 0.5, -10),
+            Size = UDim2.new(0, 35, 0, 20),
+            BackgroundTransparency = 0
+        })
+        CreateCorner(ToggleButton)
         
-        ToggleIndicator.Name = "ToggleIndicator"
-        ToggleIndicator.Parent = ToggleButton
-        ToggleIndicator.BackgroundColor3 = default and SYNTHWAVE_COLORS.Accent or SYNTHWAVE_COLORS.Background
-        ToggleIndicator.Size = UDim2.new(0.6, 0, 0.6, 0)
-        ToggleIndicator.Position = UDim2.new(0.2, 0, 0.2, 0)
-        
-        ToggleLabel.Name = "ToggleLabel"
-        ToggleLabel.Parent = ToggleFrame
-        ToggleLabel.BackgroundTransparency = 1
-        ToggleLabel.Position = UDim2.new(0, 40, 0, 0)
-        ToggleLabel.Size = UDim2.new(1, -40, 1, 0)
-        ToggleLabel.Font = Enum.Font.GothamSemibold
-        ToggleLabel.Text = text
-        ToggleLabel.TextColor3 = SYNTHWAVE_COLORS.Text
-        ToggleLabel.TextSize = 14
-        ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        local ToggleCircle = CreateElement("Frame", {
+            Name = "ToggleCircle",
+            Parent = ToggleButton,
+            BackgroundColor3 = THEME.Text,
+            Position = UDim2.new(default and 1 or 0, default and -18 or 2, 0.5, -8),
+            Size = UDim2.new(0, 16, 0, 16),
+            BackgroundTransparency = 0
+        })
+        CreateCorner(ToggleCircle)
         
         local toggled = default
         
-        ToggleButton.MouseButton1Click:Connect(function()
-            toggled = not toggled
-            TweenService:Create(ToggleIndicator, TweenInfo.new(TWEEN_SPEED), {
-                BackgroundColor3 = toggled and SYNTHWAVE_COLORS.Accent or SYNTHWAVE_COLORS.Background
+        local function updateToggle()
+            TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {
+                Position = UDim2.new(toggled and 1 or 0, toggled and -18 or 2, 0.5, -8)
             }):Play()
+            
+            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = toggled and THEME.Accent or THEME.Highlight
+            }):Play()
+            
             callback(toggled)
+        end
+        
+        ToggleButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                toggled = not toggled
+                updateToggle()
+            end
+        end)
+        
+        -- Hover Effect
+        ToggleFrame.MouseEnter:Connect(function()
+            if not toggled then
+                TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+                    BackgroundColor3 = THEME.Secondary
+                }):Play()
+            end
+        end)
+        
+        ToggleFrame.MouseLeave:Connect(function()
+            if not toggled then
+                TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+                    BackgroundColor3 = THEME.Highlight
+                }):Play()
+            end
         end)
         
         return ToggleFrame
     end
     
-    function Window:AddSlider(text, min, max, default, callback)
-        local SliderFrame = Instance.new("Frame")
-        local SliderLabel = Instance.new("TextLabel")
-        local SliderBackground = Instance.new("Frame")
-        local SliderFill = Instance.new("Frame")
-        local SliderValue = Instance.new("TextLabel")
+    function Window:AddSlider(parent, text, min, max, default, callback)
+        local SliderFrame = CreateElement("Frame", {
+            Name = "SliderFrame",
+            Parent = parent,
+            BackgroundColor3 = THEME.Secondary,
+            Size = UDim2.new(1, -20, 0, 50),
+            Position = UDim2.new(0, 10, 0, (#parent:GetChildren() - 1) * 60 + 10)
+        })
+        CreateCorner(SliderFrame)
         
-        SliderFrame.Name = "SliderFrame"
-        SliderFrame.Parent = ContentFrame
-        SliderFrame.BackgroundTransparency = 1
-        SliderFrame.Size = UDim2.new(0.9, 0, 0, 50)
-        SliderFrame.Position = UDim2.new(0.05, 0, 0, #ContentFrame:GetChildren() * 60)
+        local SliderLabel = CreateElement("TextLabel", {
+            Name = "SliderLabel",
+            Parent = SliderFrame,
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 15, 0, 5),
+            Size = UDim2.new(1, -30, 0, 20),
+            Font = FONT,
+            Text = text,
+            TextColor3 = THEME.Text,
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
         
-        SliderLabel.Name = "SliderLabel"
-        SliderLabel.Parent = SliderFrame
-        SliderLabel.BackgroundTransparency = 1
-        SliderLabel.Size = UDim2.new(1, 0, 0, 20)
-        SliderLabel.Font = Enum.Font.GothamSemibold
-        SliderLabel.Text = text
-        SliderLabel.TextColor3 = SYNTHWAVE_COLORS.Text
-        SliderLabel.TextSize = 14
-        SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+        local SliderValue = CreateElement("TextLabel", {
+            Name = "SliderValue",
+            Parent = SliderFrame,
+            BackgroundTransparency = 1,
+            Position = UDim2.new(1, -50, 0, 5),
+            Size = UDim2.new(0, 35, 0, 20),
+            Font = FONT,
+            Text = tostring(default),
+            TextColor3 = THEME.TextDark,
+            TextSize = 14
+        })
         
-        SliderBackground.Name = "SliderBackground"
-        SliderBackground.Parent = SliderFrame
-        SliderBackground.BackgroundColor3 = SYNTHWAVE_COLORS.Secondary
-        SliderBackground.Position = UDim2.new(0, 0, 0, 25)
-        SliderBackground.Size = UDim2.new(1, 0, 0, 5)
+        local SliderBar = CreateElement("Frame", {
+            Name = "SliderBar",
+            Parent = SliderFrame,
+            BackgroundColor3 = THEME.Highlight,
+            Position = UDim2.new(0, 15, 0, 35),
+            Size = UDim2.new(1, -30, 0, 4)
+        })
+        CreateCorner(SliderBar)
         
-        SliderFill.Name = "SliderFill"
-        SliderFill.Parent = SliderBackground
-        SliderFill.BackgroundColor3 = SYNTHWAVE_COLORS.Accent
-        SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        local SliderFill = CreateElement("Frame", {
+            Name = "SliderFill",
+            Parent = SliderBar,
+            BackgroundColor3 = THEME.Accent,
+            Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        })
+        CreateCorner(SliderFill)
         
-        SliderValue.Name = "SliderValue"
-        SliderValue.Parent = SliderFrame
-        SliderValue.BackgroundTransparency = 1
-        SliderValue.Position = UDim2.new(0, 0, 0, 35)
-        SliderValue.Size = UDim2.new(1, 0, 0, 20)
-        SliderValue.Font = Enum.Font.GothamSemibold
-        SliderValue.Text = tostring(default)
-        SliderValue.TextColor3 = SYNTHWAVE_COLORS.Text
-        SliderValue.TextSize = 14
+        local SliderKnob = CreateElement("Frame", {
+            Name = "SliderKnob",
+            Parent = SliderFill,
+            BackgroundColor3 = THEME.Accent,
+            Position = UDim2.new(1, -6, 0.5, -6),
+            Size = UDim2.new(0, 12, 0, 12),
+            ZIndex = 2
+        })
+        CreateCorner(SliderKnob)
         
         local function updateSlider(input)
-            local pos = math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1)
+            local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
             local value = math.floor(min + (max - min) * pos)
-            SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+            
+            TweenService:Create(SliderFill, TweenInfo.new(0.1), {
+                Size = UDim2.new(pos, 0, 1, 0)
+            }):Play()
+            
             SliderValue.Text = tostring(value)
             callback(value)
         end
         
-        SliderBackground.InputBegan:Connect(function(input)
+        SliderBar.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 updateSlider(input)
                 local connection
@@ -347,72 +560,138 @@ function SynthwaveUI:CreateWindow(title)
         return SliderFrame
     end
     
-    function Window:AddDropdown(text, options, callback)
-        local DropdownFrame = Instance.new("Frame")
-        local DropdownButton = Instance.new("TextButton")
-        local DropdownList = Instance.new("ScrollingFrame")
+    function Window:AddDropdown(parent, text, options, callback)
+        local DropdownFrame = CreateElement("Frame", {
+            Name = "DropdownFrame",
+            Parent = parent,
+            BackgroundColor3 = THEME.Secondary,
+            Size = UDim2.new(1, -20, 0, 40),
+            Position = UDim2.new(0, 10, 0, (#parent:GetChildren() - 1) * 50 + 10),
+            ClipsDescendants = true
+        })
+        CreateCorner(DropdownFrame)
         
-        DropdownFrame.Name = "DropdownFrame"
-        DropdownFrame.Parent = ContentFrame
-        DropdownFrame.BackgroundTransparency = 1
-        DropdownFrame.Size = UDim2.new(0.9, 0, 0, 30)
-        DropdownFrame.Position = UDim2.new(0.05, 0, 0, #ContentFrame:GetChildren() * 40)
+        local DropdownButton = CreateElement("TextButton", {
+            Name = "DropdownButton",
+            Parent = DropdownFrame,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 40),
+            Font = FONT,
+            Text = text,
+            TextColor3 = THEME.Text,
+            TextSize = 14
+        })
         
-        DropdownButton.Name = "DropdownButton"
-        DropdownButton.Parent = DropdownFrame
-        DropdownButton.BackgroundColor3 = SYNTHWAVE_COLORS.Secondary
-        DropdownButton.Size = UDim2.new(1, 0, 1, 0)
-        DropdownButton.Font = Enum.Font.GothamSemibold
-        DropdownButton.Text = text
-        DropdownButton.TextColor3 = SYNTHWAVE_COLORS.Text
-        DropdownButton.TextSize = 14
+        local DropdownIcon = CreateElement("ImageLabel", {
+            Name = "DropdownIcon",
+            Parent = DropdownButton,
+            BackgroundTransparency = 1,
+            Position = UDim2.new(1, -35, 0.5, -8),
+            Size = UDim2.new(0, 16, 0, 16),
+            Image = "rbxassetid://7072706796",
+            ImageColor3 = THEME.TextDark
+        })
         
-        DropdownList.Name = "DropdownList"
-        DropdownList.Parent = DropdownFrame
-        DropdownList.BackgroundColor3 = SYNTHWAVE_COLORS.Background
-        DropdownList.BorderColor3 = SYNTHWAVE_COLORS.Border
-        DropdownList.Position = UDim2.new(0, 0, 1, 0)
-        DropdownList.Size = UDim2.new(1, 0, 0, 0)
-        DropdownList.ScrollBarThickness = 4
-        DropdownList.ScrollBarImageColor3 = SYNTHWAVE_COLORS.Secondary
-        DropdownList.Visible = false
+        local OptionsList = CreateElement("Frame", {
+            Name = "OptionsList",
+            Parent = DropdownFrame,
+            BackgroundColor3 = THEME.Secondary,
+            Position = UDim2.new(0, 0, 0, 40),
+            Size = UDim2.new(1, 0, 0, #options * 30),
+            Visible = false
+        })
+        CreateCorner(OptionsList)
         
-        local function createOption(optionText)
-            local OptionButton = Instance.new("TextButton")
-            OptionButton.Name = "OptionButton"
-            OptionButton.Parent = DropdownList
-            OptionButton.BackgroundColor3 = SYNTHWAVE_COLORS.Background
-            OptionButton.Size = UDim2.new(1, 0, 0, 30)
-            OptionButton.Position = UDim2.new(0, 0, 0, #DropdownList:GetChildren() * 30)
-            OptionButton.Font = Enum.Font.GothamSemibold
-            OptionButton.Text = optionText
-            OptionButton.TextColor3 = SYNTHWAVE_COLORS.Text
-            OptionButton.TextSize = 14
+        local dropped = false
+        
+        local function toggleDropdown()
+            dropped = not dropped
+            DropdownFrame:TweenSize(
+                dropped and UDim2.new(1, -20, 0, 40 + #options * 30) or UDim2.new(1, -20, 0, 40),
+                Enum.EasingDirection.Out,
+                Enum.EasingStyle.Quart,
+                0.2,
+                true
+            )
+            TweenService:Create(DropdownIcon, TweenInfo.new(0.2), {
+                Rotation = dropped and 180 or 0
+            }):Play()
+            OptionsList.Visible = dropped
+        end
+        
+        DropdownButton.MouseButton1Click:Connect(toggleDropdown)
+        
+        for i, option in ipairs(options) do
+            local OptionButton = CreateElement("TextButton", {
+                Name = "OptionButton",
+                Parent = OptionsList,
+                BackgroundColor3 = THEME.Secondary,
+                Size = UDim2.new(1, 0, 0, 30),
+                Position = UDim2.new(0, 0, 0, (i-1) * 30),
+                Font = FONT,
+                Text = option,
+                TextColor3 = THEME.TextDark,
+                TextSize = 14,
+                AutoButtonColor = false
+            })
+            
+            OptionButton.MouseEnter:Connect(function()
+                TweenService:Create(OptionButton, TweenInfo.new(0.2), {
+                    BackgroundColor3 = THEME.Highlight
+                }):Play()
+            end)
+            
+            OptionButton.MouseLeave:Connect(function()
+                TweenService:Create(OptionButton, TweenInfo.new(0.2), {
+                    BackgroundColor3 = THEME.Secondary
+                }):Play()
+            end)
             
             OptionButton.MouseButton1Click:Connect(function()
-                DropdownButton.Text = text .. ": " .. optionText
-                DropdownList.Visible = false
-                callback(optionText)
+                DropdownButton.Text = text .. ": " .. option
+                toggleDropdown()
+                callback(option)
             end)
         end
         
-        for _, option in ipairs(options) do
-            createOption(option)
-        end
-        
-        DropdownList.Size = UDim2.new(1, 0, 0, math.min(#options * 30, 150))
-        
-        local dropdownOpen = false
-        
-        DropdownButton.MouseButton1Click:Connect(function()
-            dropdownOpen = not dropdownOpen
-            DropdownList.Visible = dropdownOpen
-        end)
-        
         return DropdownFrame
     end
-    
+
+    -- Add Tab system
+    function Window:AddTab(text)
+        local Tab = {}
+        
+        local TabPage = CreateElement("ScrollingFrame", {
+            Name = "TabPage",
+            Parent = ContentFrame,
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 0, 0, 0),
+            Size = UDim2.new(1, 0, 1, 0),
+            ScrollBarThickness = 2,
+            ScrollBarImageColor3 = THEME.Accent,
+            Visible = false
+        })
+        
+        function Tab:AddButton(text, callback)
+            return Window:AddButton(TabPage, text, callback)
+        end
+        
+        function Tab:AddToggle(text, default, callback)
+            return Window:AddToggle(TabPage, text, default, callback)
+        end
+        
+        function Tab:AddSlider(text, min, max, default, callback)
+            return Window:AddSlider(TabPage, text, min, max, default, callback)
+        end
+        
+        function Tab:AddDropdown(text, options, callback)
+            return Window:AddDropdown(TabPage, text, options, callback)
+        end
+        
+        return Tab
+    end
+
     return Window
 end
 
-return SynthwaveUI
+return ModernSynthUI

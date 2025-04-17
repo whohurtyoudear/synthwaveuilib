@@ -1,5 +1,3 @@
-local Library = {}
-
 -- Enhanced Synthwave UI Library
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -5166,7 +5164,5 @@ end
         makefolder("SynthwaveUI/configs")
     end
     
-    return Window
-end
-
-return Library
+    return SynthwaveUI
+end)()

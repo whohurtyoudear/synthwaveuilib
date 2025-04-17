@@ -1,3 +1,5 @@
+local Library = {}
+
 -- Enhanced Synthwave UI Library
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")

@@ -5166,4 +5166,7 @@ end
         makefolder("SynthwaveUI/configs")
     end
     
-    return Library
+    return Window
+end
+
+return Library
